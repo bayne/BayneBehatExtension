@@ -1,13 +1,15 @@
 {
     "name": "bayne/bayne-behat-extension",
+    "autoload": {
+        "psr-4": {
+            "": "src/"
+        }
+    },
     "authors": [
         {
             "name": "Brian Payne",
             "email": "bpayne@uci.edu"
         }
     ],
-    "autoload": {
-        "psr-0": { "Bayne\\Behat": ["src/"] }
-    },
     "require": {}
 }
