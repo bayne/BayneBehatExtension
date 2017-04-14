@@ -1,0 +1,10 @@
+{
+    "name": "bayne/bayne-behat-extension",
+    "authors": [
+        {
+            "name": "Brian Payne",
+            "email": "bpayne@uci.edu"
+        }
+    ],
+    "require": {}
+}
