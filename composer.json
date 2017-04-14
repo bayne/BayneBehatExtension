@@ -6,5 +6,8 @@
             "email": "bpayne@uci.edu"
         }
     ],
+    "autoload": {
+        "psr-0": { "Bayne\\Behat": ["src/"] }
+    },
     "require": {}
 }
