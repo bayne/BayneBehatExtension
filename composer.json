@@ -5,6 +5,7 @@
             "": "src/"
         }
     },
+    "description": "A behat extension with useful components (screenshots, etc)",
     "authors": [
         {
             "name": "Brian Payne",
