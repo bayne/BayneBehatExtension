@@ -55,13 +55,13 @@ class BayneBehatExtension implements Extension
     {
         $builder
             ->children()
+                ->scalarNode('screenshot_path')->end()
                 ->arrayNode('manual')
                     ->children()
                         ->scalarNode("filename")->isRequired()->end()
                         ->scalarNode("path")->isRequired()->end()
                         ->scalarNode("tagname")->isRequired()->end()
                         ->scalarNode("screenshot_path")->isRequired()->end()
-                    ->scalarNode('screenshot_path')->end()
                 ->end()
             ->end()
        ;

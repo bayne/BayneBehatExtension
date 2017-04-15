@@ -2,6 +2,7 @@
 
 namespace Bayne\Behat\Output\Formatter;
 
+use Bayne\Behat\ScreenshotFilenameTrait;
 use Behat\Behat\EventDispatcher\Event\AfterScenarioTested;
 use Behat\Gherkin\Node\StepNode;
 use Behat\Testwork\Output\Formatter;
@@ -11,6 +12,7 @@ use Behat\Testwork\Output\Printer\StreamOutputPrinter;
 
 class ManualScreenshotFormatter implements Formatter
 {
+    use ScreenshotFilenameTrait;
     /**
      * @var FilesystemOutputFactory
      */
@@ -78,18 +80,17 @@ class ManualScreenshotFormatter implements Formatter
                 },
                 $event->getScenario()->getSteps()
             );
-            $this->getOutputPrinter()->writeln('```cucumber');
+            $this->getOutputPrinter()->writeln('```');
             $this->getOutputPrinter()->writeln('Scenario: '.$event->getScenario()->getTitle());
             $this->getOutputPrinter()->writeln($steps);
             $this->getOutputPrinter()->writeln('```');
             $this->getOutputPrinter()->writeln(
                 sprintf(
                     '![](screenshots/%s)',
-                    md5($event->getScenario()->getTitle()).'.png'
+                    $this->getScreenshotFilename($event->getScenario())
                 )
             );
         }
-        $this->getOutputPrinter()->flush();
     }
 
     /**

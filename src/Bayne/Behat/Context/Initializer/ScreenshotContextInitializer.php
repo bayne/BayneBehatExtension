@@ -8,7 +8,13 @@ use Behat\Behat\Context\Initializer\ContextInitializer;
 
 class ScreenshotContextInitializer implements ContextInitializer
 {
+    /**
+     * @var string
+     */
     private $manualScreenshotPath;
+    /**
+     * @var string
+     */
     private $screenshotPath;
 
     /**
