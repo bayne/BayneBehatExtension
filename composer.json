@@ -11,5 +11,9 @@
             "email": "bpayne@uci.edu"
         }
     ],
-    "require": {}
+    "require": {
+        "behat/mink": "^1.7",
+        "behat/mink-selenium2-driver": "^1.3",
+        "behat/behat": "^3.0"
+    }
 }
