@@ -38,4 +38,18 @@ class AssertionContext implements Context
             throw new ElementHtmlException('Field is not marked as required', $this->minkContext->getSession()->getDriver(), $element);
         }
     }
+
+    public function spinWait(callable $checkFunction, $limit = 5000)
+    {
+        $pollFrequency = 200000;
+        $time = 0;
+        while (!$checkFunction()) {
+            usleep($pollFrequency);
+            $time += ($pollFrequency/1000);
+
+            if ($time >= $limit) {
+                break;
+            }
+        }
+    }
 }
