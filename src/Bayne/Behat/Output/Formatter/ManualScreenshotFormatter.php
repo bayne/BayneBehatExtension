@@ -86,7 +86,8 @@ class ManualScreenshotFormatter implements Formatter
             $this->getOutputPrinter()->writeln('```');
             $this->getOutputPrinter()->writeln(
                 sprintf(
-                    '![](screenshots/%s)',
+                    '![%s](screenshots/%s)',
+                    $event->getTestResult()->isPassed() ? 'Test Passed' : 'Test Failed',
                     $this->getScreenshotFilename($event->getScenario())
                 )
             );
