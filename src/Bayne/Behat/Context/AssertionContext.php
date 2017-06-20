@@ -52,4 +52,11 @@ class AssertionContext implements Context
             }
         }
     }
+
+    /**
+     * @Then /^I should see a log entry with message "([^"]*)"$/
+     */
+    public function iShouldSeeALogEntryWithMessage($message)
+    {
+    }
 }

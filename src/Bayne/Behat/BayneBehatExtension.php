@@ -3,6 +3,7 @@
 namespace Bayne\Behat;
 
 use Bayne\Behat\Context\Initializer\ScreenshotContextInitializer;
+use Bayne\Behat\Output\Formatter\JsonFormatter;
 use Bayne\Behat\Output\Formatter\ManualScreenshotFormatter;
 use Behat\Behat\Context\ServiceContainer\ContextExtension;
 use Behat\Testwork\ServiceContainer\Extension;
@@ -56,6 +57,13 @@ class BayneBehatExtension implements Extension
         $builder
             ->children()
                 ->scalarNode('screenshot_path')->end()
+                ->arrayNode('json')
+                    ->children()
+                        ->scalarNode('filename')->defaultValue('report.json')->end()
+                        ->scalarNode('output_path')->defaultValue('build/tests')->end()
+                        ->scalarNode('profiler_path')->defaultValue('build/behat/profiler')->end()
+                ->end()
+            ->end()
                 ->arrayNode('manual')
                     ->children()
                         ->scalarNode("filename")->isRequired()->end()
@@ -91,5 +99,16 @@ class BayneBehatExtension implements Extension
         $definition->addArgument($config['manual']['screenshot_path']);
         $definition->addArgument($config['screenshot_path']);
         $container->setDefinition('bayne.screenshot.context_initializer', $definition);
+
+        $definition = new Definition(JsonFormatter::class);
+
+        $definition->addArgument($config['json']['filename']);
+        $definition->addArgument($config['json']['output_path']);
+        $definition->addArgument($config['json']['profiler_path']);
+
+        $container
+            ->setDefinition('bayne.json.formatter', $definition)
+            ->addTag('output.formatter')
+        ;
     }
 }
