@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>output</title>
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        div#app {
+            display: flex;
+            flex: 1 1 auto;
+        }
+        div#app aside {
+            overflow-y: scroll;
+            height: 100vh;
+        }
+        div#app main {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+        }
+        div#app main .iframe-wrapper {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+        }
+        div#app main iframe {
+            border: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        div#app main .info {
+            border: 0;
+            width: 100%;
+            height: 100%;
+            overflow: scroll;
+        }
+        .has-error {
+            background-color: darkred;
+        }
+    </style>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+<div id="app">
+    <aside>
+        <ul class="expanded">
+            <li
+                v-for="feature in features"
+            >
+                <button
+                    v-on:click="toggle(feature)"
+                >+</button>
+                <span
+                    v-bind:class="{'has-error': featureHasError(feature)}"
+                >{{feature.name}}</span>
+                <ul
+                    v-show="expanded(feature)"
+                >
+                    <li
+                        v-for="scenario in feature.elements"
+                    >
+                        <button
+                            v-on:click="toggle(scenario)"
+                        >+</button>
+                        <span
+                            v-bind:class="{'has-error': scenarioHasError(scenario)}"
+                        >{{scenario.name}}</span>
+                        <ul
+                            v-show="expanded(scenario)"
+                        >
+                            <li
+                                v-bind:class="{'has-error': hasError(step)}"
+                                v-for="step in scenario.steps"
+                                v-on:click="select(selected, step, scenario, feature)"
+                            >
+                                {{step.keyword}} {{step.name}}
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+    </aside>
+    <main>
+        <div class="iframe-wrapper">
+            <div class="info" v-if="selected.step">
+                <h3>{{selected.feature.uri.split('/').slice(-3).join('/')}}:{{selected.step.line}}</h3>
+                <p v-if="selected.step && selected.step.result && selected.step.result.error_message">{{selected.step.result.error_message}}</p>
+            </div>
+            <iframe
+                v-bind:src="'profiler/'+selected.step.embeddings.profiler+'/request.html'"
+                v-if="hasProfiler(selected.step)"
+            ></iframe>
+        </div>
+    </main>
+</div>
+<script src="https://unpkg.com/vue"></script>
+<script src="https://unpkg.com/jquery@3.2.1"></script>
+<script>
+    $.get('output.json').then(function (features) {
+        for (feature of features) {
+            feature.expanded = false;
+            for (element of feature.elements) {
+                element.expanded = false;
+            }
+        }
+        let app = new Vue({
+            el: '#app',
+            data: {
+                features: features,
+                selected: {
+                    step: false,
+                    scenario: false,
+                    feature: false
+                },
+            },
+            methods: {
+                select: function (selected, step, scenario, feature) {
+                    selected.step = step;
+                    selected.scenario = scenario;
+                    selected.feature = feature;
+                },
+                expanded: function (object) {
+                    return object.expanded;
+                },
+                toggle: function (object) {
+                    object.expanded = !object.expanded;
+                },
+                hasProfiler: function (step) {
+                    return step && step.embeddings && step.embeddings.profiler;
+                },
+                scenarioHasError: function (scenario) {
+                    if (scenario.steps) {
+                        for (step of scenario.steps) {
+                            if (this.hasError(step)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                },
+                featureHasError: function (feature) {
+                    if (feature.elements) {
+                        for (scenario of feature.elements) {
+                            if (this.scenarioHasError(scenario)) {
+                                return true;
+                            }
+                        }
+                    }
+                    return false;
+                },
+                hasError: function (selectedStep) {
+                    if (selectedStep) {
+                        return selectedStep.result.status != 'passed';
+                    } else {
+                        return false;
+                    }
+                }
+            }
+        });
+    });
+</script>
+</body>
+</html>

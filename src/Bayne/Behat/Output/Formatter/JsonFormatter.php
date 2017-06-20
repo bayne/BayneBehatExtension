@@ -2,6 +2,8 @@
 
 namespace Bayne\Behat\Output\Formatter;
 
+use Bayne\Behat\Output\Printer\OutputHtmlPrinter;
+use Behat\Testwork\EventDispatcher\Event\AfterExerciseCompleted;
 use Behat\Testwork\Tester\Result\TestResult;
 use Vanare\BehatCucumberJsonFormatter\Formatter\Formatter;
 use Vanare\BehatCucumberJsonFormatter\Node;
@@ -9,16 +11,25 @@ use Vanare\BehatCucumberJsonFormatter\Node;
 class JsonFormatter extends Formatter
 {
     /**
-     * @var
+     * @var string
      */
     private $profilerDir;
+    /**
+     * @var
+     */
+    private $filename;
+    /**
+     * @var
+     */
+    private $outputDir;
 
     public function __construct($filename, $outputDir, $profilerDir)
     {
         parent::__construct($filename, $outputDir);
         $this->profilerDir = $profilerDir;
+        $this->filename = $filename;
+        $this->outputDir = $outputDir;
     }
-
 
     public static function getEmbeddingId($featureFilename, $stepLineNumber)
     {
@@ -35,4 +46,16 @@ class JsonFormatter extends Formatter
         $step->setEmbeddings($embeddings);
     }
 
+    /**
+     * Triggers after running tests.
+     *
+     * @param AfterExerciseCompleted $event
+     */
+    public function onAfterExercise(AfterExerciseCompleted $event)
+    {
+        parent::onAfterExercise($event);
+        $contents = file_get_contents(__DIR__.'/../output.html');
+        $file = $this->outputDir.'/output.html';
+        file_put_contents($file, $contents);
+    }
 }
