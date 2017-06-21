@@ -35,9 +35,10 @@
         }
         div#app main .info {
             border: 0;
-            width: 100%;
-            height: 100%;
             overflow: scroll;
+        }
+        li.step {
+            cursor: pointer;
         }
         .has-error {
             background-color: darkred;
@@ -74,7 +75,7 @@
                             v-show="expanded(scenario)"
                         >
                             <li
-                                v-bind:class="{'has-error': hasError(step)}"
+                                v-bind:class="{'has-error': hasError(step), 'step': true}"
                                 v-for="step in scenario.steps"
                                 v-on:click="select(selected, step, scenario, feature)"
                             >
