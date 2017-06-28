@@ -4,6 +4,7 @@ namespace Bayne\Behat\Context;
 
 use Behat\Behat\Context\Context;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
+use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Exception\UnsupportedDriverActionException;
 use Behat\MinkExtension\Context\MinkContext;
@@ -14,6 +15,7 @@ class AccessibilityContext implements Context
      * @var MinkContext
      */
     private $minkContext;
+
 
     /** @BeforeScenario */
     public function gatherContexts(BeforeScenarioScope $scope)
@@ -80,5 +82,36 @@ JS;
         if ($hasError) {
             throw new \PHPUnit_Framework_AssertionFailedError('Accessibility check failed: There was an error running the accessibility checker');
         }
+    }
+
+    /**
+     * @Then /^I (should|should not) see an accessible button labeled "([^"]*)"$/
+     */
+    public function iShouldSeeAnAccessibleButtonLabeled($should, $label)
+    {
+        $button = $this->getAccessibleButton($label);
+
+        if (null === $button && $should === 'should') {
+            throw new \PHPUnit_Framework_AssertionFailedError('Could not find a button with label: '.$label);
+        } elseif (null !== $button && $should === 'should not') {
+            throw new \PHPUnit_Framework_AssertionFailedError('Found a button with label: '.$label);
+        }
+    }
+
+    /**
+     * @Given /^I press an accessible button labeled "([^"]*)"$/
+     */
+    public function iPressAnAccessibleButtonLabeld($label)
+    {
+        $button = $this->getAccessibleButton($label);
+        $button->press();
+    }
+
+    private function getAccessibleButton($label)
+    {
+        return $this->minkContext->getSession()->getPage()->find(
+            'css',
+            'button[aria-label="'.$label.'"],input[aria-label="'.$label.'"]'
+        );
     }
 }
