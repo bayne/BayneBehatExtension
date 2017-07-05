@@ -4,7 +4,6 @@ namespace Bayne\Behat\Context;
 
 use Behat\Behat\Context\Context;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
-use Behat\Behat\Tester\Exception\PendingException;
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Exception\UnsupportedDriverActionException;
 use Behat\MinkExtension\Context\MinkContext;
@@ -68,14 +67,45 @@ JS;
         $this->minkContext->getSession()->getPage()->waitFor(5000, function () {
             return $this->minkContext->getSession()->evaluateScript('window.HTMLCS_completed');
         });
-        $messages = json_decode($this->minkContext->getSession()->evaluateScript('JSON.stringify(HTMLCS.getMessages());'), true);
+        $processMessagesJS = <<<JS
+window.getPath = function (element) {
+    let fullPath = [];
+    let i = element;
+    while (i.parentElement) {
+        let path = '';
+        i = i.parentElement;
+        path += i.tagName;
+        if (i.id) {
+            path += '#'+i.id;
+        } else if (i.className) {
+            path += "." + i.className.replace(/ /g, '.');
+        }
+        fullPath.unshift(path);
+    }
+
+    return fullPath.join(' ');
+};
+
+window.getErrors = function () {
+    let errors = [];
+    for (let message of HTMLCS.getMessages()) {
+        if (message.type === 1) {
+            errors.push({
+                msg: message.msg,
+                code: message.code,
+                type: message.type,
+                element: getPath(message.element)
+            });
+        }
+    }
+
+    return JSON.stringify(errors);
+};
+JS;
+
+        $this->minkContext->getSession()->executeScript($processMessagesJS);
+        $errorMessages = json_decode($this->minkContext->getSession()->evaluateScript('window.getErrors()'), true);
         $hasError = $this->minkContext->getSession()->evaluateScript('window.HTMLCS_error');
-        $errorMessages = array_filter(
-            $messages,
-            function ($message) {
-                return $message['type'] === 1;
-            }
-        );
         if (count($errorMessages) > 0) {
             throw new \PHPUnit_Framework_AssertionFailedError('Accessibility check failed: '.json_encode($errorMessages, JSON_PRETTY_PRINT));
         }
