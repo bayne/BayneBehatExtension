@@ -22,6 +22,10 @@ class ProfilerContext implements KernelAwareContext
      * @var MinkContext
      */
     private $minkContext;
+    /**
+     * @var AssertionContext
+     */
+    private $assertionContext;
 
     /**
      * @BeforeScenario
@@ -36,6 +40,7 @@ class ProfilerContext implements KernelAwareContext
         $environment = $scope->getEnvironment();
 
         $this->minkContext = $environment->getContext(MinkContext::class);
+        $this->assertionContext = $environment->getContext(AssertionContext::class);
     }
 
     /**
@@ -50,34 +55,39 @@ class ProfilerContext implements KernelAwareContext
     public function afterStepDebuggerToken(AfterStepScope $scope)
     {
         $session = $this->minkContext->getSession();
-        if ($session && !($session->getDriver() instanceof Selenium2Driver)) {
-            try {
-                $token = $session->getResponseHeader('x-debug-token');
-                $this
-                    ->getContainer()
-                    ->get('logger')
-                    ->notice(
-                        'Debug token',
-                        [
-                            'title' => $scope->getStep()->getText(),
-                            'token' => $token,
-                        ]
-                    )
-                ;
+        try {
+            $token = $session->getCookie('bayne.symfony_web_profiler_html_bundle.x_debug_token');
+            $this
+                ->getContainer()
+                ->get('logger')
+                ->notice(
+                    'Debug token',
+                    [
+                        'title' => $scope->getStep()->getText(),
+                        'token' => $token,
+                    ]
+                )
+            ;
 
-                if (!$scope->getTestResult()->isPassed()) {
-                    $rootDir = $this->getContainer()->getParameter('kernel.root_dir');
-                    $id = JsonFormatter::getEmbeddingId($scope->getFeature()->getFile(), $scope->getStep()->getLine());
-                    if ($this->getContainer()->has('bayne.symfony_web_profiler_html_bundle.outputter')) {
-                        $this->getContainer()->get('bayne.symfony_web_profiler_html_bundle.outputter')->write(
-                            $token,
-                            $rootDir.'/../build/behat/profiler/'.$id
-                        );
-                    }
-                }
-
-            } catch (DriverException $exception) {
+            $id = JsonFormatter::getEmbeddingId($scope->getFeature()->getFile(), $scope->getStep()->getLine());
+            if ($this->getContainer()->has('bayne.symfony_web_profiler_html_bundle.outputter')) {
+                $this->getContainer()->get('bayne.symfony_web_profiler_html_bundle.outputter')->write(
+                    $token,
+                    $this->assertionContext->getBuildPath().'/profiler/'.$id
+                );
             }
+
+        } catch (DriverException $exception) {
+            $this
+                ->getContainer()
+                ->get('logger')
+                ->notice(
+                    'Driver exception thrown',
+                    [
+                        'exception' => $exception->getMessage(),
+                    ]
+                )
+            ;
         }
     }
 

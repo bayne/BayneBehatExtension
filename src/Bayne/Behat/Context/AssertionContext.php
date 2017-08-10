@@ -16,6 +16,11 @@ class AssertionContext implements Context
     protected $minkContext;
 
     /**
+     * @var string
+     */
+    protected $buildPath;
+
+    /**
      * @BeforeScenario
      *
      * @param BeforeScenarioScope $scope
@@ -59,4 +64,25 @@ class AssertionContext implements Context
     public function iShouldSeeALogEntryWithMessage($message)
     {
     }
+
+    /**
+     * @return string
+     */
+    public function getBuildPath()
+    {
+        return $this->buildPath;
+    }
+
+    /**
+     * @param string $buildPath
+     *
+     * @return AssertionContext
+     */
+    public function setBuildPath($buildPath)
+    {
+        $this->buildPath = $buildPath;
+
+        return $this;
+    }
+
 }

@@ -103,7 +103,7 @@
 <script src="https://unpkg.com/vue"></script>
 <script src="https://unpkg.com/jquery@3.2.1"></script>
 <script>
-    $.get('output.json').then(function (features) {
+    $.get('report.json').then(function (features) {
         for (feature of features) {
             feature.expanded = false;
             for (element of feature.elements) {
