@@ -3,6 +3,7 @@
 namespace Bayne\Behat\Output\Formatter;
 
 use Bayne\Behat\Output\Printer\OutputHtmlPrinter;
+use Bayne\Behat\Output\Renderer\JsonRenderer;
 use Behat\Testwork\EventDispatcher\Event\AfterExerciseCompleted;
 use Behat\Testwork\Tester\Result\TestResult;
 use Vanare\BehatCucumberJsonFormatter\Formatter\Formatter;
@@ -22,10 +23,15 @@ class JsonFormatter extends Formatter
      * @var
      */
     private $outputDir;
+    /**
+     * @var JsonRenderer
+     */
+    private $jsonRenderer;
 
     public function __construct($filename, $outputDir, $profilerDir)
     {
         parent::__construct($filename, $outputDir);
+        $this->jsonRenderer = new JsonRenderer($this);
         $this->profilerDir = $profilerDir;
         $this->filename = $filename;
         $this->outputDir = $outputDir;
@@ -53,7 +59,11 @@ class JsonFormatter extends Formatter
      */
     public function onAfterExercise(AfterExerciseCompleted $event)
     {
-        parent::onAfterExercise($event);
+        $this->getTimer()->stop();
+
+        $this->jsonRenderer->render();
+        $this->getOutputPrinter()->write($this->jsonRenderer->getResult());
+
         $contents = file_get_contents(__DIR__.'/../output.html');
         $file = $this->outputDir.'/output.html';
         file_put_contents($file, $contents);

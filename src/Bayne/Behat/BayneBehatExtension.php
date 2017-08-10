@@ -56,21 +56,15 @@ class BayneBehatExtension implements Extension
     {
         $builder
             ->children()
-                ->scalarNode('screenshot_path')->end()
-                ->arrayNode('json')
-                    ->children()
-                        ->scalarNode('filename')->defaultValue('report.json')->end()
-                        ->scalarNode('output_path')->defaultValue('build/tests')->end()
-                        ->scalarNode('profiler_path')->defaultValue('build/behat/profiler')->end()
-                ->end()
-            ->end()
-                ->arrayNode('manual')
-                    ->children()
-                        ->scalarNode("filename")->isRequired()->end()
-                        ->scalarNode("path")->isRequired()->end()
-                        ->scalarNode("tagname")->isRequired()->end()
-                        ->scalarNode("screenshot_path")->isRequired()->end()
-                ->end()
+                ->scalarNode('build_path')->defaultValue('%paths.base%/build/behat')->end()
+                ->scalarNode('screenshot_path')->defaultValue('%build_path%/screenshots')->end()
+                ->scalarNode('json_filename')->defaultValue('report.json')->end()
+                ->scalarNode('json_output_path')->defaultValue('%build_path%')->end()
+                ->scalarNode('json_profiler_path')->defaultValue('%build_path%/profiler')->end()
+                ->scalarNode('manual_filename')->defaultValue('output.md')->end()
+                ->scalarNode('manual_path')->defaultValue('%build_path%/manual')->end()
+                ->scalarNode('manual_tagname')->defaultValue('manually')->end()
+                ->scalarNode('manual_screenshot_path')->defaultValue('%build_path%/manual/screenshots')->end()
             ->end()
        ;
     }
@@ -84,31 +78,33 @@ class BayneBehatExtension implements Extension
     public function load(ContainerBuilder $container, array $config)
     {
         $definition = new Definition(ManualScreenshotFormatter::class);
-        $definition->addArgument($config['manual']['filename']);
-        $definition->addArgument($config['manual']['path']);
-        $definition->addArgument($config['manual']['tagname']);
-        $definition->addArgument($config['manual']['screenshot_path']);
+        $definition->addArgument($config['manual_filename']);
+        $definition->addArgument($config['manual_path']);
+        $definition->addArgument($config['manual_tagname']);
+        $definition->addArgument($config['manual_screenshot_path']);
 
         $container
-            ->setDefinition("bayne.manual_screenshot.formatter", $definition)
-            ->addTag("output.formatter")
+            ->setDefinition('bayne.manual_screenshot.formatter', $definition)
+            ->addTag('output.formatter')
         ;
 
         $definition = new Definition(ScreenshotContextInitializer::class);
         $definition->addTag(ContextExtension::INITIALIZER_TAG, array('priority' => 0));
-        $definition->addArgument($config['manual']['screenshot_path']);
+        $definition->addArgument($config['manual_screenshot_path']);
         $definition->addArgument($config['screenshot_path']);
         $container->setDefinition('bayne.screenshot.context_initializer', $definition);
 
         $definition = new Definition(JsonFormatter::class);
 
-        $definition->addArgument($config['json']['filename']);
-        $definition->addArgument($config['json']['output_path']);
-        $definition->addArgument($config['json']['profiler_path']);
+        $definition->addArgument($config['json_filename']);
+        $definition->addArgument($config['json_output_path']);
+        $definition->addArgument($config['json_profiler_path']);
 
         $container
             ->setDefinition('bayne.json.formatter', $definition)
             ->addTag('output.formatter')
         ;
+
+        $container->setParameter('build_path', $config['build_path']);
     }
 }
