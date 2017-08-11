@@ -3,6 +3,7 @@
 namespace Bayne\Behat;
 
 use Bayne\Behat\Context\Initializer\AssertionContextInitializer;
+use Bayne\Behat\Context\Initializer\ProfilerContextInitializer;
 use Bayne\Behat\Context\Initializer\ScreenshotContextInitializer;
 use Bayne\Behat\Output\Formatter\JsonFormatter;
 use Bayne\Behat\Output\Formatter\ManualScreenshotFormatter;
@@ -93,6 +94,7 @@ class BayneBehatExtension implements Extension
         $definition->addTag(ContextExtension::INITIALIZER_TAG, array('priority' => 0));
         $definition->addArgument($config['manual_screenshot_path']);
         $definition->addArgument($config['screenshot_path']);
+        $definition->addArgument($config['manual_tagname']);
         $container->setDefinition('bayne.screenshot.context_initializer', $definition);
 
         $definition = new Definition(JsonFormatter::class);
@@ -110,6 +112,11 @@ class BayneBehatExtension implements Extension
         $definition->addArgument($config['build_path']);
         $definition->addTag(ContextExtension::INITIALIZER_TAG, array('priority' => 0));
         $container->setDefinition('bayne.assertion.context_initializer', $definition);
+
+        $definition = new Definition(ProfilerContextInitializer::class);
+        $definition->addArgument($config['manual_tagname']);
+        $definition->addTag(ContextExtension::INITIALIZER_TAG, array('priority' => 0));
+        $container->setDefinition('bayne.profiler.context_initializer', $definition);
 
         $container->setParameter('build_path', $config['build_path']);
     }

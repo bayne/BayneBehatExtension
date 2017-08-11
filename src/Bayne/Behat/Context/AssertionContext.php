@@ -4,7 +4,9 @@ namespace Bayne\Behat\Context;
 
 use Behat\Behat\Context\Context;
 use Behat\Behat\Context\Environment\InitializedContextEnvironment;
+use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
+use Behat\Gherkin\Node\ScenarioInterface;
 use Behat\Mink\Exception\ElementHtmlException;
 use Behat\MinkExtension\Context\MinkContext;
 

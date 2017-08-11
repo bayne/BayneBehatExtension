@@ -16,17 +16,23 @@ class ScreenshotContextInitializer implements ContextInitializer
      * @var string
      */
     private $screenshotPath;
+    /**
+     * @var string
+     */
+    private $manualTagName;
 
     /**
      * ScreenshotContextInitializer constructor.
      *
-     * @param $manualScreenshotPath
-     * @param $screenshotPath
+     * @param string $manualScreenshotPath
+     * @param string $screenshotPath
+     * @param string $manualTagName
      */
-    public function __construct($manualScreenshotPath, $screenshotPath)
+    public function __construct($manualScreenshotPath, $screenshotPath, $manualTagName)
     {
         $this->manualScreenshotPath = $manualScreenshotPath;
         $this->screenshotPath = $screenshotPath;
+        $this->manualTagName = $manualTagName;
     }
 
 
@@ -40,6 +46,7 @@ class ScreenshotContextInitializer implements ContextInitializer
         if ($context instanceof ScreenshotContext) {
             $context->setManualScreenshotPath($this->manualScreenshotPath);
             $context->setScreenshotPath($this->screenshotPath);
+            $context->setManualTagName($this->manualTagName);
         }
     }
 }

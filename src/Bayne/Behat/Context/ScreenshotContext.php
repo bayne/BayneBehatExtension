@@ -32,6 +32,22 @@ class ScreenshotContext implements Context
      * @var string
      */
     private $screenshotPath;
+    /**
+     * @var string
+     */
+    private $manualTagName;
+
+    /**
+     * @param string $manualTagName
+     *
+     * @return ScreenshotContext
+     */
+    public function setManualTagName($manualTagName)
+    {
+        $this->manualTagName = $manualTagName;
+
+        return $this;
+    }
 
     public function setScreenshotPath($screenshotPath)
     {
@@ -65,22 +81,24 @@ class ScreenshotContext implements Context
     public function afterStep(AfterStepScope $scope)
     {
         //if test has failed, and is not an api test, get screenshot
-        if(!$scope->getTestResult()->isPassed() && $this->minkContext->getSession()->getDriver() instanceof Selenium2Driver)
-        {
-            //create filename string
+        if ($this->minkContext->getSession()->getDriver() instanceof Selenium2Driver) {
 
-            $featureFolder = preg_replace('/\W/', '', $scope->getFeature()->getTitle());
+            if (!$scope->getTestResult()->isPassed() || $this->currentScenario->hasTag($this->manualTagName)) {
+                //create filename string
 
-            $scenarioName = $this->currentScenario->getTitle();
-            $fileName = preg_replace('/\W/', '', $scenarioName) . '.png';
+                $featureFolder = preg_replace('/\W/', '', $scope->getFeature()->getTitle());
 
-            //create screenshots directory if it doesn't exist
-            if (!file_exists($this->screenshotPath. $featureFolder)) {
-                mkdir($this->screenshotPath . $featureFolder, 0777, true);
+                $scenarioName = $this->currentScenario->getTitle();
+                $fileName = preg_replace('/\W/', '', $scenarioName).'.png';
+
+                //create screenshots directory if it doesn't exist
+                if (!file_exists($this->screenshotPath.$featureFolder)) {
+                    mkdir($this->screenshotPath.$featureFolder, 0777, true);
+                }
+
+                //take screenshot and save as the previously defined filename
+                file_put_contents($this->screenshotPath.$featureFolder.'/'.$fileName, $this->minkContext->getSession()->getDriver()->getScreenshot());
             }
-
-            //take screenshot and save as the previously defined filename
-            file_put_contents($this->screenshotPath . $featureFolder . '/' . $fileName, $this->minkContext->getSession()->getDriver()->getScreenshot());
         }
 
     }

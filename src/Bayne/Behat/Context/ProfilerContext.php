@@ -8,6 +8,7 @@ use Behat\Behat\Context\Exception\ContextNotFoundException;
 use Behat\Behat\Hook\Scope\AfterScenarioScope;
 use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
+use Behat\Gherkin\Node\ScenarioInterface;
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Exception\DriverException;
 use Behat\MinkExtension\Context\MinkContext;
@@ -26,6 +27,14 @@ class ProfilerContext implements KernelAwareContext
      * @var AssertionContext
      */
     private $assertionContext;
+    /**
+     * @var string
+     */
+    private $manualTagName;
+    /**
+     * @var ScenarioInterface
+     */
+    private $currentScenario;
 
     /**
      * @BeforeScenario
@@ -38,6 +47,8 @@ class ProfilerContext implements KernelAwareContext
     {
         /** @var InitializedContextEnvironment $environment */
         $environment = $scope->getEnvironment();
+
+        $this->currentScenario = $scope->getScenario();
 
         $this->minkContext = $environment->getContext(MinkContext::class);
         $this->assertionContext = $environment->getContext(AssertionContext::class);
@@ -70,11 +81,14 @@ class ProfilerContext implements KernelAwareContext
             ;
 
             $id = JsonFormatter::getEmbeddingId($scope->getFeature()->getFile(), $scope->getStep()->getLine());
-            if ($this->getContainer()->has('bayne.symfony_web_profiler_html_bundle.outputter')) {
-                $this->getContainer()->get('bayne.symfony_web_profiler_html_bundle.outputter')->write(
-                    $token,
-                    $this->assertionContext->getBuildPath().'/profiler/'.$id
-                );
+
+            if ($this->currentScenario->hasTag($this->manualTagName) || false === $scope->getTestResult()->isPassed()) {
+                if ($this->getContainer()->has('bayne.symfony_web_profiler_html_bundle.outputter')) {
+                    $this->getContainer()->get('bayne.symfony_web_profiler_html_bundle.outputter')->write(
+                        $token,
+                        $this->assertionContext->getBuildPath().'/profiler/'.$id
+                    );
+                }
             }
 
         } catch (DriverException $exception) {
@@ -109,5 +123,17 @@ class ProfilerContext implements KernelAwareContext
     public function afterScenarioLogBegin(AfterScenarioScope $afterScenarioScope)
     {
         $this->getContainer()->get('logger')->notice('End scenario', ['title' => $afterScenarioScope->getScenario()->getTitle()]);
+    }
+
+    /**
+     * @param string $manualTagName
+     *
+     * @return ProfilerContext
+     */
+    public function setManualTagName($manualTagName)
+    {
+        $this->manualTagName = $manualTagName;
+
+        return $this;
     }
 }
