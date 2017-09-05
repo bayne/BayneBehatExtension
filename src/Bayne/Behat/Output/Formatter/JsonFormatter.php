@@ -4,6 +4,8 @@ namespace Bayne\Behat\Output\Formatter;
 
 use Bayne\Behat\Output\Printer\OutputHtmlPrinter;
 use Bayne\Behat\Output\Renderer\JsonRenderer;
+use Bayne\Behat\ScreenshotFilenameTrait;
+use Behat\Behat\EventDispatcher\Event as BehatEvent;
 use Behat\Testwork\EventDispatcher\Event\AfterExerciseCompleted;
 use Behat\Testwork\Tester\Result\TestResult;
 use Vanare\BehatCucumberJsonFormatter\Formatter\Formatter;
@@ -11,6 +13,7 @@ use Vanare\BehatCucumberJsonFormatter\Node;
 
 class JsonFormatter extends Formatter
 {
+    use ScreenshotFilenameTrait;
     /**
      * @var string
      */
@@ -27,14 +30,19 @@ class JsonFormatter extends Formatter
      * @var JsonRenderer
      */
     private $jsonRenderer;
+    /**
+     * @var string
+     */
+    private $manualScreenshotDir;
 
-    public function __construct($filename, $outputDir, $profilerDir)
+    public function __construct($filename, $outputDir, $profilerDir, $manualScreenshotDir)
     {
         parent::__construct($filename, $outputDir);
         $this->jsonRenderer = new JsonRenderer($this);
         $this->profilerDir = $profilerDir;
         $this->filename = $filename;
         $this->outputDir = $outputDir;
+        $this->manualScreenshotDir = $manualScreenshotDir;
     }
 
     public static function getEmbeddingId($featureFilename, $stepLineNumber)
@@ -44,10 +52,15 @@ class JsonFormatter extends Formatter
 
     protected function processStep(Node\Step $step, TestResult $result)
     {
+        parent::processStep($step, $result);
+
         $id = self::getEmbeddingId($this->getCurrentFeature()->getFile(), $step->getLine());
         $embeddings = [];
         if (is_dir($this->profilerDir.'/'.$id)) {
             $embeddings['profiler'] = $id;
+        }
+        if (is_file($this->manualScreenshotDir.'/'.$id.'.png')) {
+            $embeddings['screenshot'] = $id.'.png';
         }
         $step->setEmbeddings($embeddings);
     }

@@ -2,13 +2,14 @@
 
 namespace Bayne\Behat\Context;
 
+use Bayne\Behat\Output\Formatter\JsonFormatter;
 use Bayne\Behat\ScreenshotFilenameTrait;
 use Behat\Behat\Context\Context;
 use Behat\Behat\Context\Environment\InitializedContextEnvironment;
 use Behat\Behat\Hook\Scope\AfterStepScope;
 use Behat\Behat\Hook\Scope\BeforeScenarioScope;
+use Behat\Behat\Hook\Scope\BeforeStepScope;
 use Behat\Gherkin\Node\ScenarioInterface;
-use Behat\Gherkin\Node\StepNode;
 use Behat\Mink\Driver\Selenium2Driver;
 use Behat\Mink\Exception\UnsupportedDriverActionException;
 use Behat\MinkExtension\Context\MinkContext;
@@ -36,6 +37,14 @@ class ScreenshotContext implements Context
      * @var string
      */
     private $manualTagName;
+    /**
+     * @var string
+     */
+    private $featureFile;
+    /**
+     * @var string
+     */
+    private $stepLineNumber;
 
     /**
      * @param string $manualTagName
@@ -67,6 +76,7 @@ class ScreenshotContext implements Context
     public function setUpTestEnvironment($scope)
     {
         $this->currentScenario = $scope->getScenario();
+        $this->featureFile = $scope->getFeature()->getFile();
         $environment = $scope->getEnvironment();
         if ($environment instanceof InitializedContextEnvironment) {
             $this->minkContext = $environment->getContext(MinkContext::class);
@@ -86,21 +96,31 @@ class ScreenshotContext implements Context
             if (!$scope->getTestResult()->isPassed() || $this->currentScenario->hasTag($this->manualTagName)) {
                 //create filename string
 
-                $featureFolder = preg_replace('/\W/', '', $scope->getFeature()->getTitle());
+                $embeddingId = JsonFormatter::getEmbeddingId($this->featureFile, $scope->getStep()->getLine());
 
-                $scenarioName = $this->currentScenario->getTitle();
-                $fileName = preg_replace('/\W/', '', $scenarioName).'.png';
+                $filename = $this->getScreenshotFilename($this->currentScenario);
 
-                //create screenshots directory if it doesn't exist
-                if (!file_exists($this->screenshotPath.$featureFolder)) {
-                    mkdir($this->screenshotPath.$featureFolder, 0777, true);
+        //create screenshots directory if it doesn't exist
+                if (!file_exists($this->manualScreenshotPath)) {
+                    mkdir($this->manualScreenshotPath, 0777, true);
                 }
 
                 //take screenshot and save as the previously defined filename
-                file_put_contents($this->screenshotPath.$featureFolder.'/'.$fileName, $this->minkContext->getSession()->getDriver()->getScreenshot());
+                $screenshotData = $this->minkContext->getSession()->getDriver()->getScreenshot();
+                file_put_contents($this->manualScreenshotPath.'/'.$filename, $screenshotData);
+                file_put_contents($this->manualScreenshotPath.'/'.$embeddingId.'.png', $screenshotData);
             }
         }
 
+    }
+
+
+    /**
+     * @BeforeStep
+     */
+    public function stepLineNumber(BeforeStepScope $scope)
+    {
+        $this->stepLineNumber = $scope->getStep()->getLine();
     }
 
     /**
@@ -115,6 +135,8 @@ class ScreenshotContext implements Context
             );
         }
 
+        $embeddingId = JsonFormatter::getEmbeddingId($this->featureFile, $this->stepLineNumber);
+
         $filename = $this->getScreenshotFilename($this->currentScenario);
 
         //create screenshots directory if it doesn't exist
@@ -123,6 +145,8 @@ class ScreenshotContext implements Context
         }
 
         //take screenshot and save as the previously defined filename
-        file_put_contents($this->manualScreenshotPath . '/' . $filename, $this->minkContext->getSession()->getDriver()->getScreenshot());
+        $screenshotData = $this->minkContext->getSession()->getDriver()->getScreenshot();
+        file_put_contents($this->manualScreenshotPath.'/'.$filename, $screenshotData);
+        file_put_contents($this->manualScreenshotPath.'/'.$embeddingId.'.png', $screenshotData);
     }
 }

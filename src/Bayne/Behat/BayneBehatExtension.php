@@ -102,6 +102,7 @@ class BayneBehatExtension implements Extension
         $definition->addArgument($config['json_filename']);
         $definition->addArgument($config['json_output_path']);
         $definition->addArgument($config['json_profiler_path']);
+        $definition->addArgument($config['manual_screenshot_path']);
 
         $container
             ->setDefinition('bayne.json.formatter', $definition)
